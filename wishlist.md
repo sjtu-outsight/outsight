@@ -14,4 +14,6 @@
 
 下面是愿望清单的正式内容：
 
+- Git Internals
+
 - Git Hook
