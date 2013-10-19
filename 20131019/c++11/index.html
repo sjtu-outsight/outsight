@@ -1,0 +1,673 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>New features in C++11</title>
+
+		<meta name="description" content="New features in C++11">
+		<meta name="author" content="Wang Jiajun">
+
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<link rel="stylesheet" href="css/reveal.min.css">
+		<link rel="stylesheet" href="css/theme/default.css" id="theme">
+
+		<!-- For syntax highlighting -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- If the query includes 'print-pdf', use the PDF print sheet -->
+		<script>
+			document.write( '<link rel="stylesheet" href="css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );
+		</script>
+
+		<!--[if lt IE 9]>
+		<script src="lib/js/html5shiv.js"></script>
+		<![endif]-->
+	</head>
+
+	<body>
+
+		<div class="reveal">
+
+			<!-- Any section element inside of this container is displayed as a slide -->
+			<div class="slides">
+				<section>
+					<h1>New features in C++11</h1>
+					<p>
+						<small>Presented by <strong>Wang Jiajun</strong></small>
+					</p>
+				</section>
+
+				<section>
+					<section>
+						<h2>C++ Standards</h2>
+						<ul>
+							<li>1st: C++98</li>
+							<li>2nd: C++03</li>
+							<li><strong>3rd: C++13</strong></li>
+						</ul>
+
+						<aside class="notes">
+							Oh hey, these are some notes. They'll be hidden in your presentation, but you can see them if you open the speaker notes window (hit 's' on your keyboard).
+						</aside>
+					</section>
+					<section>
+						<h2>C++13</h2>
+						<p>Formerly known as C++0x. But they failed to complete the standard before 2010. :(</p>
+					</section>
+				</section>
+
+				<section>
+					<h2>Core Language</h2>
+				</section>
+
+				<section>
+					<section>
+						<h2>Rvalue references and move constructors</h2>
+						<p>A new non-const reference type called an rvalue reference, identified by T&amp;&amp;</p>
+						<p>Why?</p>
+						<p class="fragment">How to swap two number?</p>
+						<pre class="fragment"><code data-trim>
+void swap(int &amp;a, int &amp;b)
+{
+  int temp = a;
+  a = b;
+  b = temp;
+}
+						</code></pre>
+					</section>
+					<section>
+						<h2>What about swap two string?</h2>
+						<p>The swap function can be time-consuming when coming to class</p>
+						<pre><code data-trim>
+void naiveswap(string &amp;a, string &amp;b)
+{
+  string temp = a;
+  a = b;
+  b = temp;
+}
+						</code></pre>
+						<p>Memory allocated, object copy...</p>
+						<p>Why can't we only swap the char* of the objects?</p>
+					</section>
+					<section>
+						<h2>std::move</h2>
+						<p>Turns a lvalue into a rvalue</p>
+						<pre><code data-trim>
+void ProcessValue(int&amp; i) {
+  std::cout &lt;&lt; &quot;LValue processed: &quot; &lt;&lt; i &lt;&lt; std::endl;
+}
+
+void ProcessValue(int&amp;&amp; i) {
+  std::cout &lt;&lt; &quot;RValue processed: &quot; &lt;&lt; i &lt;&lt; std::endl;
+}
+
+int main() {
+  int a = 0;
+  ProcessValue(a);
+  ProcessValue(std::move(a));
+}
+						</code></pre>
+						<pre><code data-trim>
+LValue processed: 0
+RValue processed: 0
+						</code></pre>
+					</section>
+					<section>
+						<h2>The new swap</h2>
+						<pre><code data-trim>
+class Movable
+{
+  Movable (Movable&amp;&amp;); //move constructor
+  Movable&amp;&amp; operator=(Movable&amp;&amp;); //move assignment operator
+};
+						</code></pre>
+						<pre><code data-trim>
+template &lt;class T&gt; swap(T &amp;a, T &amp;b)
+{
+  T tmp(std::move(a)); // move a to tmp
+  a = std::move(b);    // move b to a
+  b = std::move(tmp);  // move tmp to b
+}
+						</code></pre>
+					</section>
+					<section>
+						<h2>Perfect Forwarding</h2>
+						<p>A common need</p>
+						<pre><code data-trim>
+template &lt;typename T&gt; void forward_value(const T &amp;val) {
+  process_value(val);
+}
+template &lt;typename T&gt; void forward_value(T &amp;val) {
+  process_value(val);
+}
+
+int a = 0;
+const int &amp;b = 1;
+forward_value(a); // int&amp;
+forward_value(b); // const int&amp;
+forward_value(2); // int&amp;
+						</code></pre>
+						<p>So we must overload lots of functions :(</p>
+					</section>
+					<section>
+						<h2>Perfect Forwarding</h2>
+						<pre><code data-trim>
+template &lt;typename T&gt; void forward_value(T &amp;&amp;val) {
+  process_value(val);
+}
+
+int a = 0;
+const int &amp;b = 1;
+forward_value(a); // int&amp;
+forward_value(b); // const int&amp;
+forward_value(2); // int&amp;&amp;
+						</code></pre>
+						<p>Designed to reduce the amount of code the programmer has to write</p>
+					</section>
+				</section>
+
+				<section>
+					<section>
+						<h2>Constant Expressions: constexpr</h2>
+						<p>A new keyword to guarantee that a function or object constructor is a compile-time constant.</p>
+					</section>
+					<section>
+						<h2>Example</h2>
+						<p>What will happen when running the code?</p>
+						<pre><code data-trim>
+int get_five() {return 5;}
+int some_value[get_five() + 7];
+						</code></pre>
+						<p class="fragment">Compile error!</p>
+						<p class="fragment">Now, we can use constexpr:</p>
+						<pre class="fragment"><code data-trim>
+constexpr int get_five() {return 5;}
+int some_value[get_five() + 7];
+						</code></pre>
+					</section>
+				</section>
+
+				<section>
+					<h2>Modification to the definition of plain old data (POD)</h2>
+					<p>A class/struct/union is considered POD if it is trivial, standard-layout, and all of its non-static data members and base classes are PODs.</p>
+				</section>
+
+				<section>
+					<h2>Extern template declaration</h2>
+					<pre><code data-trim>
+extern template class std::vector&lt;MyClass&gt;;
+					</code></pre>
+					<p>Tell the compiler not to instantiate the template in this translation unit.</p>
+				</section>
+
+				<section>
+					<section>
+						<h2>Initializer lists</h2>
+						<p>In C, you can quick initialize a struct like this:</p>
+						<pre><code data-trim>
+struct Object {
+    float first;
+    int second;
+};
+ 
+Object scalar = {0.43f, 10}; //One Object, with first=0.43f and second=10
+Object anArray[] = {{13.4f, 3}, {43.28f, 29}, {5.934f, 17}}; //An array of three Objects
+						</code></pre>
+						<p class="fragment">What about C++ class (e.g. std::Vector)?</p>
+					</section>
+					<section>
+						<h2>Example:</h2>
+						<pre><code data-trim>
+vector&lt;string&gt; v = { "xyzzy", "plugh", "abracadabra" };
+						</code></pre>
+						<p>This can be very very useful!</p>
+					</section>
+					<section>
+						<h2>How to?</h2>
+						<p>Define a new constructor:</p>
+						<pre><code data-trim>
+class SequenceClass {
+public:
+    SequenceClass(std::initializer_list&lt;int&gt; list);
+};
+						</code></pre>
+						<p class="fragment">Then...</p>
+						<pre class="fragment"><code data-trim>
+SequenceClass some_var = {1, 4, 5, 6};
+						</code></pre>
+					</section>
+				</section>
+
+				<section>
+					<section>
+						<h2>Uniform initialization</h2>
+						<p>How to initialize a class?</p>
+						<pre class="fragment"><code data-trim>
+Obj var(foo);
+Obj *ptr = new Obj(foo);
+						</code></pre>
+						<p class="fragment">But in initializer lists we use curly brace {}, not parenthesis ()</p>
+						<p class="fragment">They are not uniform...</p>
+					</section>
+					<section>
+						<h2>Introduce the curly brace</h2>
+						<pre><code data-trim>
+struct BasicStruct {
+    int x;
+    double y;
+};
+
+struct AltStruct {
+    AltStruct(int x, double y) : x_{x}, y_{y} {}
+
+private:
+    int x_;
+    double y_;
+};
+
+BasicStruct var1{5, 3.2};
+AltStruct var2{2, 4.3};
+						</code></pre>
+					</section>
+					<section>
+						<h2>Even some amazing format</h2>
+						<pre><code data-trim>
+struct IdString {
+    std::string name;
+    int identifier;
+};
+
+IdString get_string() {
+    return {"foo", 42}; //Note the lack of explicit type.
+}
+						</code></pre>
+					</section>
+				</section>
+
+				<section>
+					<section>
+						<h2>Type inference</h2>
+						<p>If we travelling a std container like vector:</p>
+						<pre class="fragment"><code data-trim>
+for (std::vector&lt;int&gt;::const_iterator itr = myvec.cbegin(); itr != myvec.cend(); ++itr)
+						</code></pre>
+						<p class="fragment">Use <strong>auto</strong> to shorten the code:</p>
+						<pre class="fragment"><code data-trim>
+for (auto itr = myvec.cbegin(); itr != myvec.cend(); ++itr)
+						</code></pre>
+					</section>
+					<section>
+						<h2>Determine the type of an expression</h2>
+						<pre><code data-trim>
+int some_int;
+decltype(some_int) other_integer_variable = 5;
+						</code></pre>
+					</section>
+				</section>
+
+				<section>
+					<h2>Range-based for loop</h2>
+					<p>A new syntax for the for loop:</p>
+					<pre><code data-trim>
+int my_array[5] = {1, 2, 3, 4, 5};
+// double the value of each element in my_array:
+for (int &amp;x : my_array) {
+    x *= 2;
+}
+// similar but also using type inference for array elements
+for (auto &amp;x : my_array) {
+    x *= 2;
+}
+					</code></pre>
+				</section>
+
+				<section>
+					<section>
+						<h2>Lambda functions</h2>
+						<p>It looks like:</p>
+						<pre><code data-trim>
+[capture](parameters)-&gt;return-type {body}
+						</code></pre>
+					</section>
+					<section>
+						<h2>Example:</h2>
+						<pre><code data-trim>
+int main()
+{
+  char s[]=&quot;Hello World!&quot;;
+  int Uppercase = 0; //modified by the lambda
+  for_each(s, s+sizeof(s), [&amp;Uppercase] (char c) {
+    if (isupper(c))
+      Uppercase++;
+  });
+  cout&lt;&lt; Uppercase&lt;&lt;&quot; uppercase letters in: &quot;&lt;&lt; s&lt;&lt;endl;
+}
+						</code></pre>
+					</section>
+				</section>
+
+				<section>
+					<section>
+						<h2>Alternative function syntax</h2>
+						<p>What's wrong with this code?</p>
+						<pre><code data-trim>
+template&lt;class Lhs, class Rhs&gt;
+decltype(lhs+rhs) adding_func(const Lhs &amp;lhs, const Rhs &amp;rhs) {return lhs + rhs;}
+						</code></pre>
+						<p class="fragment">lhs and rhs have not yet been defined!</p>
+					</section>
+					<section>
+						<h2>Workaround</h2>
+						<pre><code data-trim>
+template&lt;class Lhs, class Rhs&gt;
+auto adding_func(const Lhs &amp;lhs, const Rhs &amp;rhs) -&gt; decltype(lhs+rhs) {return lhs + rhs;}
+						</code></pre>
+					</section>
+				</section>
+
+				<section>
+					<h2>Delegation</h2>
+					<p>C++11 allows constructors to call other peer constructors.</p>
+					<p>This feature has already built in Java and C#.</p>
+					<pre><code data-trim>
+class SomeType  {
+    int number;
+ 
+public:
+    SomeType(int new_number) : number(new_number) {}
+    SomeType() : SomeType(42) {}
+};
+					</code></pre>
+				</section>
+
+				<section>
+					<section>
+						<h2>Explicit overrides</h2>
+						<p>In C++03, it is possible to accidentally create a new virtual function, when one intended to override a base class function. For example:</p>
+						<pre><code data-trim>
+struct Base {
+    virtual void some_func(float);
+};
+
+struct Derived : Base {
+    virtual void some_func(int);
+};
+						</code></pre>
+						<p>C++11 provides syntax to solve this problem.</p>
+						<pre><code data-trim>
+struct Base {
+    virtual void some_func(float);
+};
+
+struct Derived : Base {
+    // error!
+    virtual void some_func(int) override;
+};
+						</code></pre>
+					</section>
+					<section>
+						<h2>Final</h2>
+						<p>Prevent inheriting from classes</p>
+						<pre><code data-trim>
+struct Base1 final { };
+
+struct Derived1 : Base1 { }; // Error!
+						</code></pre>
+						<p>Preventing overriding methods in derived classes</p>
+						<pre><code data-trim>
+struct Base2 {
+    virtual void f() final;
+};
+
+struct Derived2 : Base2 {
+    void f(); // Error!
+};
+						</code></pre>
+					</section>
+				</section>
+
+				<section>
+					<h2>Null pointer constant</h2>
+					<p>In C++03, we use NULL to represent null pointer.</p>
+					<p>But if NULL is defined as 0 (which is usually the case in C++), what will happen in the following code?</p>
+					<pre><code>
+void foo(char *);
+void foo(int);
+
+foo(NULL);
+					</code></pre>
+					<p>In C++11, you should write:</p>
+					<pre><code>
+foo(nullptr);
+					</code></pre>
+				</section>
+
+				<section>
+					<h2>Strongly typed enumerations</h2>
+					<p>The type-safe enumeration</p>
+					<pre><code>
+enum class Enumeration {
+    Val1,
+    Val2,
+    Val3 = 100,
+    Val4 // = 101
+};
+
+Enumeration::Val4 == 101 // error!
+					</code></pre>
+				</section>
+
+				<section>
+					<h2>Right angle bracket</h2>
+					<p>C++03's parser defines "&gt;&gt;" as the right shift operator in all cases</p>
+					<pre><code>
+vector&lt;vector&lt;int&gt;&gt; arr1; // Compile error!
+vector&lt;vector&lt;int&gt; &gt; arr2;
+					</code></pre>
+				</section>
+
+				<section>
+					<h2>Explicit conversion operators</h2>
+					<p>The explicit keyword can now be applied to conversion operators</p>
+					<pre><code>
+explicit operator bool();
+					</code></pre>
+				</section>
+
+				<section>
+					<h2>Alias templates</h2>
+					<p>In C++03, you can use typedef to make a alias. But not for template!</p>
+					<pre><code>
+template &lt;typename First, typename Second, int Third&gt;
+class SomeType;
+ 
+template &lt;typename Second&gt;
+typedef SomeType&lt;OtherType, Second, 5&gt; TypedefName; // Illegal in C++03
+					</code></pre>
+					<p>C++11 adds this ability with the following syntax:</p>
+					<pre><code>
+template &lt;typename Second&gt;
+using TypedefName = SomeType&lt;OtherType, Second, 5&gt;;
+					</code></pre>
+				</section>
+
+				<section>
+					<h2>Unrestricted unions</h2>
+					<p>Now, everything except reference can live in a union.</p>
+				</section>
+
+				<section>
+					<h2>Variadic templates</h2>
+					<pre><code>
+template&lt;typename... Values&gt; class tuple;
+tuple&lt;int, std::vector&lt;int&gt;, std::map&lt;std::string, std::vector&lt;int&gt;&gt;&gt; some_instance_name;
+					</code></pre>
+				</section>
+
+				<section>
+					<h2>New string literals</h2>
+					<p>Three Unicode encodings that C++11 supports: UTF-8, UTF-16, and UTF-32</p>
+					<p>C++11 adds two new character types: char16_t and char32_t</p>
+					<pre><code>
+u8"I'm a UTF-8 string."
+u"This is a UTF-16 string."
+U"This is a UTF-32 string."
+					</code></pre>
+					<p>C++11 provides a raw string literal:</p>
+					<pre><code>
+R"(The String Data \ Stuff " )"
+R"delimiter(The String Data \ Stuff " )delimiter"
+					</code></pre>
+				</section>
+
+				<section>
+					<h2>User-defined literals</h2>
+					<pre><code>
+OutputType operator "" _suffix(const char * literal_string);
+OutputType some_variable = 1234_suffix;
+					</code></pre>
+				</section>
+
+				<section>
+					<h2>Multithreading memory model</h2>
+					<p>The C++11 standardizes support for multithreaded programming.</p>
+				</section>
+
+				<section>
+					<h2>Thread-local storage</h2>
+					<p>Define a tls: thread_local</p>
+				</section>
+
+				<section>
+					<section>
+						<h2>Explicitly defaulted and deleted special member functions</h2>
+						<p>default:</p>
+						<pre><code>
+struct SomeType {
+    SomeType() = default; //The default constructor is explicitly stated.
+    SomeType(OtherType value);
+};
+						</code></pre>
+					</section>
+					<section>
+						<h2>Explicitly defaulted and deleted special member functions</h2>
+						<p>delete:</p>
+						<pre><code>
+struct NonCopyable {
+    NonCopyable() = default;
+    NonCopyable(const NonCopyable&amp;) = delete;
+    NonCopyable &amp; operator=(const NonCopyable&amp;) = delete;
+};
+						</code></pre>
+						<pre><code>
+struct NoInt {
+    void f(double i);
+    void f(int) = delete;
+};
+						</code></pre>
+					</section>
+				</section>
+
+				<section>
+					<h2>Type long long int</h2>
+					<p>......</p>
+				</section>
+
+				<section>
+					<h2>Static assertions</h2>
+					<pre><code>
+template&lt;class T&gt;
+struct Check  {
+    static_assert(sizeof(int) &lt;= sizeof(T), &quot;T is not big enough!&quot;);
+};
+					</code></pre>
+				</section>
+
+				<section>
+					<h2>sizeof on the members of classes</h2>
+					<pre><code>
+struct SomeType { OtherType member; };
+
+sizeof(SomeType::member); // Does not work with C++03. Okay with C++11
+					</code></pre>
+				</section>
+
+				<section>
+					<h2>Others</h2>
+					<ul>
+						<li>Control and query object alignment</li>
+						<li>Allow garbage collected implementations</li>
+					</ul>
+				</section>
+
+				<section>
+					<h2>Standard Library</h2>
+					<ul>
+						<li>Upgrades to standard library components</li>
+						<li>Threading facilities</li>
+						<li>Tuple types</li>
+						<li>Hash tables</li>
+						<li>Regular expressions</li>
+						<li>General-purpose smart pointers</li>
+						<li>Extensible random number facility</li>
+						<li>...</li>
+					</ul>
+				</section>
+
+				<section>
+					<h2>Conclusion</h2>
+					<p>Many new improvements!</p>
+					<p>Still lack something useful: XML, GUI, socket, reflection...</p>
+				</section>
+
+				<section>
+					<h2>Future</h2>
+					<p>C++ is still evolving!</p>
+					<p>C++14, C++17...</p>
+					<p class="fragment">Master in C++? Maybe no one and never...</p>
+				</section>
+
+				<section>
+					<h1>Thanks</h1>
+				</section>
+			</div>
+
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.min.js"></script>
+
+		<script>
+
+			// Full list of configuration options available here:
+			// https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				controls: true,
+				progress: true,
+				history: true,
+				center: true,
+
+				theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+				transition: Reveal.getQueryHash().transition || 'default', // default/cube/page/concave/zoom/linear/fade/none
+
+				// Optional libraries used to extend on reveal.js
+				dependencies: [
+					{ src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+					{ src: 'plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+					{ src: 'plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+				]
+			});
+
+		</script>
+
+	</body>
+</html>
