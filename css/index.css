@@ -1,0 +1,53 @@
+* {
+    padding: 0px;
+    margin: 0px;
+}
+
+body {
+    background-color: #F2EBBF;
+    color: #5C4B51;
+}
+
+#content {
+    padding: 50px 100px;
+}
+
+h1 {
+    font-family: 'Times New Roman', Arial;
+    margin: 10px;
+}
+
+
+hr {
+    border: 0;
+    border-bottom: 3px dashed #5C4B51;
+    margin: 10px 0 15px 0;
+}
+
+.session {
+    background-color: #A5C88F;
+    margin: 20px 0;
+    padding: 40px 25px;
+    box-shadow: 5px 5px #7C966C, 10px 10px #546649;
+}
+
+p {
+    margin: 20px 0;
+}
+
+a {
+    background-color: #EF847B;
+    padding: 5px;
+    color: #F2EBBF;
+    text-decoration: none;
+}
+
+a:visited {
+    background-color: #B5645D;
+}
+
+a:hover {
+    transition-duration: 0.5s;
+    background-color: #5E3431;
+}
+
