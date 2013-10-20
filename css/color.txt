@@ -1,0 +1,24 @@
+/* Author: Ovilia
+ * This file contains color information used in CSS.
+ * Please contact Ovilia before editing or deleting this file.
+ */
+
+Black:
+#5C4B51
+
+Blue:
+#8CBEB2
+
+Yellow:
+#F2EBBF
+
+Green:
+#A5C88F
+#7C966C
+#546649
+
+Red:
+#EF847B
+#B5645D
+#5E3431
+
