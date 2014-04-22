@@ -1,0 +1,713 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>C++11 New Features++ - STL11 101</title>
+
+		<meta name="description" content="A framework for easily creating beautiful presentations using HTML">
+		<meta name="author" content="Hakim El Hattab">
+
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/theme/default.css" id="theme">
+
+		<!-- For syntax highlighting -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+		<script>
+			if( window.location.search.match( /print-pdf/gi ) ) {
+				var link = document.createElement( 'link' );
+				link.rel = 'stylesheet';
+				link.type = 'text/css';
+				link.href = 'css/print/pdf.css';
+				document.getElementsByTagName( 'head' )[0].appendChild( link );
+			}
+		</script>
+
+		<!--[if lt IE 9]>
+		<script src="lib/js/html5shiv.js"></script>
+		<![endif]-->
+	</head>
+
+	<body>
+
+		<div class="reveal">
+
+			<!-- Any section element inside of this container is displayed as a slide -->
+			<div class="slides">
+                            <section data-markdown data-separator="^;;;;" data-vertical="^;;">
+                                <script type="text/template">
+## C++11 New Features++
+### STL11 101
+
+#### by Yao Li
+;;;;
+
+## Contents
+
+We have seen many new features since C++11.
+
+But we've missed a very critical part in practice.
+
+<p class="fragment">STL!</p>
+
+;;;;
+## New Features in STL
+
+In this presentation, we'll discuss:
+
+- Utilities
+- Containers
+- Random
+- Thread
+
+<p class="fragment">We will not be able to cover all C++11 additions to STL in this presentation. For more information, please check <a href="http://en.cppreference.com/w/">here</a>.</p>
+
+;;;;
+
+## Utilities
+
+- Tuple.
+
+;;
+
+## Tuple
+
+As you know, we already have `pair` as a composition of two elements.
+
+    template<
+        class T1,
+        class T2
+    > struct pair;
+
+<p class="fragment">What if we want to have a composition of three elements?<br> Or more?</p>
+
+;;
+
+## Tuple
+
+Solution before C++11:
+
+    std::pair<double, std::pair<char, std::string> >
+
+This is awful, especially when you are trying to access the third element:
+
+    the_pair.second.first
+
+Worse for more elements.
+
+;;
+
+## Tuple
+
+In C++11, we have:
+
+    template< class... Types >
+    class tuple
+
+The `tuple` can be declared in this way:
+
+    std::tuple<double, char, std::string>
+
+and can be accessed in this way:
+
+    std::get<2>(the_tuple)
+
+;;
+
+## Other Useful Functions
+
+    template< class... Types >
+    tuple<VTypes...> make_tuple( Types&&... args );
+
+Creates a tuple object, deducing the target type from the types of arguments.
+
+Example:
+
+    auto t = std::make_tuple(3.0, 'A', "Spider-Man");
+    std::cout<<std::get<2>(t)<<" get a "<<std::get<0>(t)<<"!\n";
+
+;;
+
+## Other Useful Functions
+
+    template< class... Types >
+    tuple<Types&...> tie( Types&... args );
+
+    template< class... Tuples >
+    tuple<CTypes...> tuple_cat(Tuples&&... args);
+
+    ...
+
+;;;;
+
+## Containers
+
+- Array
+- Singly-liked list
+- Unordererd set/map...
+
+;;
+
+## Array
+
+As you know, we already have `vector` as a dynamic size array.
+
+    template<
+        class T,
+        class Allocator = std::allocator<T>
+    > class vector;
+
+If all we need is simply a constant size array we can use C-style array `T[N]`.
+
+But using this type of array we gain no benefits like using a standard container, like knowing its size, random access iterators, etc.
+
+;;
+
+## Array
+
+So here is `std::array`.
+
+    template< 
+        class T, 
+        std::size_t N 
+    > struct array;
+
+Example:
+
+    std::array<int, 3> a = {1, 2, 3};
+
+    // C-style
+    for (std::size_t i = 0; i < a.size(); i++)
+        std::cout<<a[i]<<' ';
+    std::cout<<std::endl;
+
+    // using an iterator
+    for (auto i = a.begin(); i != a.end(); i++)
+        std::cout<<*i<<' ';
+    std::cout<<std::endl;
+
+    // C++11 foreach
+    for(auto i: a)
+        std::cout<<i<<' ';
+    std::cout<<std::endl;
+    
+;;
+
+## Array
+
+Summary:
+
+- constant size array
+- C-style performance and accessibility
+- with benefits of a standard container
+
+;;
+
+## Singly-linked List
+
+As you know, we already have `std::list`, a doubly-linked list:
+
+    template<
+        class T,
+        class Allocator = std::allocator<T>
+    > class list;
+
+However, what if we simply want a singly-linked list for space efficiency?
+
+;;
+
+## Singly-liked List
+
+So here is `std::forward_list`.
+
+    template<
+        class T,
+        class Allocator = std::allocator<T>
+    > class forward_list;
+
+Example:
+
+    std::forward_list<int> l = {34, 77, 16, 2};
+
+    for (auto i = l.begin(); i != l.end(); i++)
+        std::cout<<*i<<' ';
+    std::cout<<std::endl;
+
+There's not `rbegin()` or `rend()` for this container!
+
+;;
+
+## Unordered Set/Map...
+
+The pre-C++11 associative containers includes:
+
+- `std::set`
+- `std::map`
+- `std::multiset`
+- `std::multimap`
+
+They are always implemented as a tree structure.
+
+<p class="fragment">So the search complexity is O(log n).</p>
+
+<p class="fragment">There's no set/map in STL which provides an O(1) search complexity! (like hashset/hashmap)</p>
+
+;;
+
+## Unordered Set/Map...
+
+So here are:
+
+- `std::unordered_set`
+- `std::unordered_map`
+- `std::unordered_multiset`
+- `std::unordered_multimap`
+
+<p class="fragment">Let's take `std::unordered_map` as example.</p>
+
+;;
+
+## Unordered Map
+
+The `std::unorderd_map`:
+
+    template<
+        class Key,
+        class T,
+        class Hash = std::hash<Key>,
+        class KeyEqual = std::equal_to<Key>,
+        class Allocator = std::allocator< std::pair<const Key, T> >
+    > class unordered_map;
+
+Example:
+
+    std::unordered_map<std::string, double> scoresheet = {
+         {"Spider-Man", 3.0},
+         {"Iron-Man", 3.3},
+         {"Wolverine", 1.9}};
+
+    auto t = scoresheet.find("Wolverine");
+    if (t != scoresheet.end())
+        std::cout<<t->second<<std::endl;
+    else
+        std::cout<<"Not found!\n";
+
+;;
+
+## Hash Function
+
+`unordered_map` uses `std::hash` as default hash function.
+
+    template< class Key >
+    struct hash; // not defined
+
+an `operator()` is defined for this struct s.t.:
+
+1. Accepts a single parameter of type Key.
+2. Returns a value of type `size_t` that represents the hash value of the parameter.
+3. Does not throw exceptions when called.
+4. For two parameters k1 and k2 that are equal, their hash value are equal as well.
+5. For two different parameters k1 and k2 that are not equal, the probability that their hash values are equal should be very small.
+
+;;
+
+## Hash Specializations
+
+    bool;
+    char;
+    char16_t;
+    char32_t;
+    wchar_t;
+    ...
+    std::string
+    std::u16string
+    std::u32string
+    std::wstring
+    ...
+    std::vector<bool>
+    std::thread::id
+    ...
+
+For a complete list, check <a href="http://en.cppreference.com/w/cpp/utility/hash">here</a>.
+  
+;; 
+
+## Hash Specializations
+
+**Attention!**
+
+- There is no specialization for C strings! `std::hash<const char *>` results in a hash value of the pointer.
+- The hash functions are not designed to be cryptographically secure!
+
+;;
+
+## Define Your Own Hash Function
+
+    struct S
+    {
+        std::string first_name;
+        std::string last_name;
+    };
+     
+    namespace std
+    {
+        template<>
+        struct hash<S>
+        {
+            typedef S argument_type;
+            typedef std::size_t value_type;
+     
+            value_type operator()(argument_type const& s) const
+            {
+                value_type const h1 ( std::hash<std::string>()(s.first_name) );
+                value_type const h2 ( std::hash<std::string>()(s.last_name) );
+                return h1 ^ (h2 << 1);
+            }
+        };
+    }
+
+<small>* Example is from <a href="http://www.cplusplus.com/reference/unordered_map/unordered_map/find/">cplusplus.com</a></small>
+
+;;;;
+
+## Random
+
+- Random number engines
+- Random number distributions
+
+;;
+
+## Random
+
+What's the problem of old random number generator?
+
+    #include <stdio.h>
+    #include <stdlib.h>
+    #include <time.h>
+    int main() {
+        srand(time(NULL));
+        for (int i = 0; i < 16; ++i) {
+            printf("%d ", rand() % 100);
+        }
+        printf("\n");
+    }
+
+See <a href="http://channel9.msdn.com/Events/GoingNative/2013/rand-Considered-Harmful">this video</a> to learn what's wrong with this code.
+
+;;
+
+## Random Number Engines
+
+- linear congruential engine,
+- Mersenne twister engine,
+- subtract with carry (a lagged Fibonacci) engine
+
+Take Mersenne twister as example:
+
+    template<
+        class UIntType, 
+        size_t w, size_t n, size_t m, size_t r,
+        UIntType a, size_t u, UIntType d, size_t s,
+        UIntType b, size_t t,
+        UIntType c, size_t l, UIntType f
+    > class mersenne_twister_engine;
+
+Actually you don't really need to use this.
+
+;;
+
+## Random Number Engines
+
+You can use these predefined random number generators:
+
+- `minstd_rand0`
+- `minstd_rand`
+- `mt19937`
+- `mt19937_64`
+- `ranlux24_base`
+- `ranlux48_base`
+- `ranlux24`
+- `ranlux48`
+- `knuth_b`
+- `default_random_engine`
+
+;;
+
+## Random Number Engines
+
+Take `mt19937` as example:
+
+    std::mersenne_twister_engine<std::uint_fast32_t, 32, 624, 397, 31, 
+                                 0x9908b0df, 11, 
+                                 0xffffffff, 7, 
+                                 0x9d2c5680, 15, 
+                                 0xefc60000, 18, 1812433253>
+
+;;
+
+## Random number distributions
+
+- uniform distributions,
+- Bernoulli distributions,
+- Poisson distributions,
+- normal distributions,
+- sampling distributions.
+
+;;
+
+## Random number distributions
+
+So if we want to generate random numbers in uniform distributions.
+
+    #include <iostream>
+    #include <random>
+    int main() {
+        std::random_device rd;
+        std::mt19937 mt(rd());
+        std::uniform_int_distribution<int> dist(0, 99);
+        for (int i = 0; i < 16; ++i) {
+            std::cout << dist(mt) << " ";
+        }
+        std::cout << std::endl;
+    }
+
+
+<small>* The example is from <a href="http://video.ch9.ms/sessions/gonat/2013/STLGN13rand.pptx">here.</a></small>
+
+;;
+
+## Notes
+
+- `std::uniform_int_distribution<int> dist(0, 99)` means [0, 99], not [0, 99) !
+- Don't use `std::random_shuffle`, use `std::shuffle` instead!
+- Multiple threads cannot simultaneously call a single object.
+
+;;;;
+
+## Thread
+
+<blockquote>Some people, when confronted with a problem, think, "I know, I'll use regular expressions." Now they have two problems.</blockquote>
+<blockquote>Some people, when confronted with a problem, think "I know, I'll use multithreading". Nothhw tpe yawrve o oblems.</blockquote>
+<small>* From <a href="https://joindiaspora.com/posts/1653418">Two Problems</a>.</small>
+
+;;
+
+## Thread
+
+- threads
+- mutex
+- condition variables
+
+;;
+
+## Threads
+
+In times before C++11, we often use `pthread` or whatever is possible on Windows.
+
+We no longer suffer from this for now here is `std::thread`!
+
+;;
+
+## Threads
+
+Using `std::thread` is rather simple.
+
+    #include <iostream>
+    #include <thread>
+     
+    void f1(int n)
+    {
+        for (int i = 0; i < n; ++i)
+            std::cout<<i<<std::endl;
+    }
+     
+    int main()
+    {
+        std::thread t(f1, 10);
+        t.join();
+        std::cout<<"Done!"<<std::endl;
+    }
+
+;;
+
+## Threads
+
+Or even more simple by employing lambda expression:
+
+    #include <iostream>
+    #include <thread>
+     
+    int main()
+    {
+        std::thread t([](int n) {
+            for (int i = 0; i < n; i++)
+                std::cout<<i<<std::endl;
+        }, 10);
+        t.join();
+        std::cout<<"Done!"<<std::endl;
+    }
+
+;;
+
+## Threads
+
+To get the current thread, use `std::get_thread`!
+
+Functions of current thread:
+
+- `yield`
+- `get_id`
+- `sleep_for`
+- `sleep_until`
+
+;;
+
+## Mutual Exclusion (Mutex)
+
+<blockquote>Some people, when confronted with a problem, think, "I know, I'll use mutexes." Now they have</blockquote>
+<small>* From <a href="https://joindiaspora.com/posts/1653418">Two Problems</a>.</small>
+
+;;
+
+## Mutual Exclusion (Mutex)
+
+- `mutex`
+- `timed_mutex`
+- `recursive_mutex`
+- `recursive_timed_mutex`
+
+;;
+
+## Mutex
+
+Take `mutex` as example:
+
+    std::mutex m;
+    m.lock();
+    // do something
+    m.unlock();
+
+However, this can be simpler by using locks:
+
+    {
+        std::lock_guard<std::mutex> lock(m);
+        // do something
+    }
+
+`mutex` is released when `lock_guard` is destructed.
+
+;;
+
+## Mutex
+
+- `timed_mutex` provides `try_lock_for` and `try_lock_until` methods to try acquring the lock until timeout.
+- `recursive_mutex` allows the owner thread to call `lock` or `try_lock` for multiple times, and released after a matching number of `unlock`.
+
+;;
+
+## Condition Variables
+
+- `condition_variable`
+- `condition_variable_any`
+- `notify_all_at_thread_exit`
+- `cv_status`
+
+;;
+
+## Condition Variables
+
+Take `condition_variable` as example.
+
+    // global
+    std::mutex m;
+    std::condition_variable cv;
+    
+    // thread 1
+    std::unique_lock<std::mutex> lock(m);
+    // do something
+    cv.wait(lock);
+    // do something when awaken
+    
+    // thread 2
+    std::unique_lock<std::mutex> lock(m);
+    // do something
+    cv.notify_one(); // or cv.notify_all();
+
+;;
+
+## What I Haven't Covered
+
+- `unique_lock`
+- `future`
+
+;;;;
+
+## What I Haven't Covered in C++11 STL
+
+- Algorithms (`all_of`, `copy_if`, `is_sorted`, `minmax`, etc.)
+- Math (`remainder`, `exp2`, `log2`, `cbrt`, etc.)
+- Regular Expressions (`regex_match`, `regex_search`, etc.)
+- Atomic Operations (`atomic_compare_exchange_weak`, etc.)
+
+;;
+
+## Related Materials
+
+- <a href="http://en.cppreference.com/w/">cppreference</a>
+- <a href="http://sjtu-outsight.github.io/outsight/20131019/c++11/index.html/">New Features in C++11</a>
+- <a href="http://channel9.msdn.com/Events/GoingNative/2013/rand-Considered-Harmful">rand() Considered Harmful</a>
+- <a href="http://www.stroustrup.com/C++11FAQ.html">C++11 FAQ by Bjarne Stroustrup</a>
+
+;;;;
+
+## Q&A
+### Thanks!
+
+                                    </script>
+                            </section>
+                        </div>
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.min.js"></script>
+
+		<script>
+
+			// Full list of configuration options available here:
+			// https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				controls: true,
+				progress: true,
+				history: true,
+				center: true,
+
+				theme: Reveal.getQueryHash().theme || 'serif', // available themes are in /css/theme
+				transition: Reveal.getQueryHash().transition || 'default', // default/cube/page/concave/zoom/linear/fade/none
+
+				// Parallax scrolling
+				// parallaxBackgroundImage: 'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg',
+				// parallaxBackgroundSize: '2100px 900px',
+
+				// Optional libraries used to extend on reveal.js
+				dependencies: [
+					{ src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+					{ src: 'plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+					{ src: 'plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+				]
+			});
+
+		</script>
+
+	</body>
+</html>
